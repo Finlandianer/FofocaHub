@@ -1,23 +1,191 @@
 import pygame
 import os
+import random
+import math
 
 pygame.init()
-screen = pygame.display.set_mode((800, 600))
-img_path = os.path.join(os.path.dirname(__file__), "imagens", "capoturei-1.png (1).png")
-cidadesombria_img = pygame.image.load(img_path).convert()
+try:
+    pygame.mixer.init()
+except pygame.error:
+    pass
+
+WIDTH, HEIGHT = 800, 600
+screen = pygame.display.set_mode((WIDTH, HEIGHT))
+pygame.display.set_caption("Didstein - Cidade Sombria")
 clock = pygame.time.Clock()
-x = 0
+
+# ─── Carrega o background ─────────────────────────────────────────────────────
+img_path = os.path.join(os.path.dirname(__file__), "imagens", "capoturei-1.png.png")
+cidadesombria_img = pygame.image.load(img_path).convert()
+cidadesombria_img = pygame.transform.scale(cidadesombria_img, (WIDTH, HEIGHT))
+
+# ─── Sistema de chuva ─────────────────────────────────────────────────────────
+class Gota:
+    def __init__(self):
+        self.reset(nascendo=True)
+
+    def reset(self, nascendo=False):
+        self.x = random.uniform(0, WIDTH)
+        self.y = random.uniform(-HEIGHT, 0) if nascendo else random.uniform(-60, -5)
+        self.vel_y = random.uniform(280, 420)   # pixels/segundo
+        self.vel_x = random.uniform(30, 60)     # leve inclinação
+        self.comprimento = random.uniform(8, 18)
+        self.alpha = random.randint(40, 100)
+        self.espessura = 1 if random.random() < 0.7 else 2
+
+    def update(self, dt):
+        self.x += self.vel_x * dt
+        self.y += self.vel_y * dt
+        if self.y > HEIGHT + 20:
+            self.reset()
+
+TOTAL_GOTAS = 220
+gotas = [Gota() for _ in range(TOTAL_GOTAS)]
+chuva_surf = pygame.Surface((WIDTH, HEIGHT), pygame.SRCALPHA)
+
+# ─── Sistema de névoa (parallax em 3 camadas) ─────────────────────────────────
+class CamadaNevoa:
+    def __init__(self, velocidade, alpha, y_base, altura, cor):
+        self.x = 0.0
+        self.velocidade = velocidade
+        self.alpha = alpha
+        self.y_base = y_base
+        self.altura = altura
+        self.cor = cor
+        self.surf = self._criar_surf()
+
+    def _criar_surf(self):
+        s = pygame.Surface((WIDTH * 2, self.altura), pygame.SRCALPHA)
+        for x in range(WIDTH * 2):
+            fator = (math.sin(x * 0.008) * 0.3 + 0.7)
+            a = int(self.alpha * fator)
+            pygame.draw.line(s, (*self.cor, a), (x, 0), (x, self.altura))
+        return s
+
+    def update(self, dt):
+        self.x -= self.velocidade * dt
+        if self.x <= -WIDTH:
+            self.x += WIDTH
+
+    def draw(self, surface):
+        x = int(self.x)
+        surface.blit(self.surf, (x, self.y_base))
+        surface.blit(self.surf, (x + WIDTH, self.y_base))
+
+camadas_nevoa = [
+    CamadaNevoa(velocidade=8,  alpha=28, y_base=160, altura=80,  cor=(30, 35, 50)),
+    CamadaNevoa(velocidade=14, alpha=20, y_base=260, altura=60,  cor=(25, 30, 45)),
+    CamadaNevoa(velocidade=22, alpha=15, y_base=340, altura=50,  cor=(20, 25, 40)),
+]
+
+# ─── Efeito de flicker ────────────────────────────────────────────────────────
+class Flicker:
+    def __init__(self):
+        self.alpha = 0
+        self.timer = 0.0
+
+    def update(self, dt):
+        self.timer += dt
+        if random.random() < 0.004:
+            self.alpha = random.randint(15, 45)
+        else:
+            self.alpha = max(0, self.alpha - int(600 * dt))
+
+    def draw(self, surface):
+        if self.alpha > 0:
+            s = pygame.Surface((WIDTH, HEIGHT), pygame.SRCALPHA)
+            s.fill((0, 0, 0, self.alpha))
+            surface.blit(s, (0, 0))
+
+flicker = Flicker()
+
+# ─── Scanlines ────────────────────────────────────────────────────────────────
+scanline_surf = pygame.Surface((WIDTH, HEIGHT), pygame.SRCALPHA)
+for y in range(0, HEIGHT, 3):
+    pygame.draw.line(scanline_surf, (0, 0, 0, 22), (0, y), (WIDTH, y))
+
+# ─── Vinheta ──────────────────────────────────────────────────────────────────
+vinheta_surf = pygame.Surface((WIDTH, HEIGHT), pygame.SRCALPHA)
+cx, cy = WIDTH // 2, HEIGHT // 2
+for y in range(HEIGHT):
+    for x in range(WIDTH):
+        dist = math.sqrt(((x - cx) / (WIDTH * 0.6)) ** 2 +
+                         ((y - cy) / (HEIGHT * 0.6)) ** 2)
+        a = int(min(255, max(0, (dist - 0.5) * 300)))
+        if a > 0:
+            vinheta_surf.set_at((x, y), (0, 0, 0, a))
+
+# ─── Sombra lateral esquerda (enfatizado) ──────────────────────────────────────
+sombra_esquerda = pygame.Surface((WIDTH, HEIGHT), pygame.SRCALPHA)
+shadow_width = 300
+for x in range(shadow_width):
+    # Gradiente: esquerda mais escura, vai diminuindo pra direita
+    alpha = int((1 - x / shadow_width) * 220)
+    pygame.draw.line(sombra_esquerda, (0, 0, 0, alpha), (x, 0), (x, HEIGHT))
+
+# ─── Tinte ────────────────────────────────────────────────────────────────────
+tinte_surf = pygame.Surface((WIDTH, HEIGHT), pygame.SRCALPHA)
+tinte_surf.fill((5, 8, 25, 35))
+
+# ─── Sombra inferior (gradiente escuro) ────────────────────────────────────────
+sombra_inferior = pygame.Surface((WIDTH, HEIGHT), pygame.SRCALPHA)
+shadow_height = 250
+for y in range(shadow_height):
+    # Gradiente de opacidade: começa transparente em cima e fica mais opaco embaixo
+    alpha = int((y / shadow_height) * 200)
+    pygame.draw.line(sombra_inferior, (0, 0, 0, alpha), (0, HEIGHT - shadow_height + y), (WIDTH, HEIGHT - shadow_height + y))
+
+# ─── Função de desenho ────────────────────────────────────────────────────────
+def draw_frame():
+    # Background
+    screen.blit(cidadesombria_img, (0, 0))
+    
+    # Tinte
+    screen.blit(tinte_surf, (0, 0))
+    
+    # Névoa
+    for camada in camadas_nevoa:
+        camada.draw(screen)
+    
+    # Chuva
+    chuva_surf.fill((0, 0, 0, 0))
+    for gota in gotas:
+        x2 = int(gota.x + gota.vel_x * 0.04)
+        y2 = int(gota.y + gota.comprimento)
+        pygame.draw.line(chuva_surf, (180, 200, 220, gota.alpha),
+                         (int(gota.x), int(gota.y)), (x2, y2), gota.espessura)
+    screen.blit(chuva_surf, (0, 0))
+    
+    # Vinheta
+    screen.blit(vinheta_surf, (0, 0))
+        # Sombra lateral esquerda
+    screen.blit(sombra_esquerda, (0, 0))
+        # Sombra inferior
+    screen.blit(sombra_inferior, (0, 10))
+    
+    # Scanlines
+    screen.blit(scanline_surf, (0, 0))
+    
+    # Flicker
+    flicker.draw(screen)
+
+# ─── Loop principal ───────────────────────────────────────────────────────────
 running = True
 while running:
-    clock.tick(60)
-    screen.blit(cidadesombria_img, (x, 30))
-    x += 1
-       # x = (x - 1) % 800 Move para a esquerda e reinicia quando sair da tela, use caso queira um loop infinito igual terraria
+    dt = clock.tick(60) / 1000.0
+    
+    for gota in gotas:
+        gota.update(dt)
+    for camada in camadas_nevoa:
+        camada.update(dt)
+    flicker.update(dt)
+    
+    draw_frame()
     pygame.display.flip()
+    
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
-pygame.display.flip()
-           
+
 pygame.quit()
 

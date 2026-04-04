@@ -27,8 +27,8 @@ class Gota:
     def reset(self, nascendo=False):
         self.x = random.uniform(0, WIDTH)
         self.y = random.uniform(-HEIGHT, 0) if nascendo else random.uniform(-60, -5)
-        self.vel_y = random.uniform(280, 420)   # pixels/segundo
-        self.vel_x = random.uniform(30, 60)     # leve inclinação
+        self.vel_y = random.uniform(280, 420)
+        self.vel_x = random.uniform(30, 60)
         self.comprimento = random.uniform(8, 18)
         self.alpha = random.randint(40, 100)
         self.espessura = 1 if random.random() < 0.7 else 2
@@ -43,7 +43,7 @@ TOTAL_GOTAS = 220
 gotas = [Gota() for _ in range(TOTAL_GOTAS)]
 chuva_surf = pygame.Surface((WIDTH, HEIGHT), pygame.SRCALPHA)
 
-# ─── Sistema de névoa (parallax em 3 camadas) ─────────────────────────────────
+# ─── Sistema de névoa ─────────────────────────────────────────────────────────
 class CamadaNevoa:
     def __init__(self, velocidade, alpha, y_base, altura, cor):
         self.x = 0.0
@@ -73,9 +73,9 @@ class CamadaNevoa:
         surface.blit(self.surf, (x + WIDTH, self.y_base))
 
 camadas_nevoa = [
-    CamadaNevoa(velocidade=8,  alpha=28, y_base=160, altura=80,  cor=(30, 35, 50)),
-    CamadaNevoa(velocidade=14, alpha=20, y_base=260, altura=60,  cor=(25, 30, 45)),
-    CamadaNevoa(velocidade=22, alpha=15, y_base=340, altura=50,  cor=(20, 25, 40)),
+    CamadaNevoa(velocidade=8,  alpha=28, y_base=160, altura=80, cor=(30, 35, 50)),
+    CamadaNevoa(velocidade=14, alpha=20, y_base=260, altura=60, cor=(25, 30, 45)),
+    CamadaNevoa(velocidade=22, alpha=15, y_base=340, altura=50, cor=(20, 25, 40)),
 ]
 
 # ─── Efeito de flicker ────────────────────────────────────────────────────────
@@ -115,39 +115,32 @@ for y in range(HEIGHT):
         if a > 0:
             vinheta_surf.set_at((x, y), (0, 0, 0, a))
 
-# ─── Sombra lateral esquerda (enfatizado) ──────────────────────────────────────
+# ─── Sombra lateral esquerda ──────────────────────────────────────────────────
 sombra_esquerda = pygame.Surface((WIDTH, HEIGHT), pygame.SRCALPHA)
-shadow_width = 300
+shadow_width = 350
 for x in range(shadow_width):
-    # Gradiente: esquerda mais escura, vai diminuindo pra direita
-    alpha = int((1 - x / shadow_width) * 220)
-    pygame.draw.line(sombra_esquerda, (0, 0, 0, alpha), (x, 0), (x, HEIGHT))
+    alpha = int((1 - x / shadow_width) ** 1.3 * 255)
+    pygame.draw.line(sombra_esquerda, (0, 10, 30, alpha), (x, 0), (x, HEIGHT))
 
 # ─── Tinte ────────────────────────────────────────────────────────────────────
 tinte_surf = pygame.Surface((WIDTH, HEIGHT), pygame.SRCALPHA)
-tinte_surf.fill((5, 8, 25, 35))
+tinte_surf.fill((5, 8, 25, 50))
 
-# ─── Sombra inferior (gradiente escuro) ────────────────────────────────────────
+# ─── Sombra inferior ──────────────────────────────────────────────────────────
 sombra_inferior = pygame.Surface((WIDTH, HEIGHT), pygame.SRCALPHA)
-shadow_height = 250
+shadow_height = 400
 for y in range(shadow_height):
-    # Gradiente de opacidade: começa transparente em cima e fica mais opaco embaixo
-    alpha = int((y / shadow_height) * 200)
-    pygame.draw.line(sombra_inferior, (0, 0, 0, alpha), (0, HEIGHT - shadow_height + y), (WIDTH, HEIGHT - shadow_height + y))
+    fator = (y / shadow_height) ** 1.5
+    alpha = int(fator * 255)
+    pygame.draw.line(sombra_inferior, (0, 0, 10, alpha),
+                     (0, HEIGHT - shadow_height + y), (WIDTH, HEIGHT - shadow_height + y))
 
-# ─── Função de desenho ────────────────────────────────────────────────────────
-def draw_frame():
-    # Background
+# ─── Função de desenho dos efeitos ────────────────────────────────────────────
+def draw_efeitossombrios():
     screen.blit(cidadesombria_img, (0, 0))
-    
-    # Tinte
     screen.blit(tinte_surf, (0, 0))
-    
-    # Névoa
     for camada in camadas_nevoa:
         camada.draw(screen)
-    
-    # Chuva
     chuva_surf.fill((0, 0, 0, 0))
     for gota in gotas:
         x2 = int(gota.x + gota.vel_x * 0.04)
@@ -155,37 +148,64 @@ def draw_frame():
         pygame.draw.line(chuva_surf, (180, 200, 220, gota.alpha),
                          (int(gota.x), int(gota.y)), (x2, y2), gota.espessura)
     screen.blit(chuva_surf, (0, 0))
-    
-    # Vinheta
     screen.blit(vinheta_surf, (0, 0))
-        # Sombra lateral esquerda
     screen.blit(sombra_esquerda, (0, 0))
-        # Sombra inferior
-    screen.blit(sombra_inferior, (0, 10))
-    
-    # Scanlines
     screen.blit(scanline_surf, (0, 0))
-    
-    # Flicker
     flicker.draw(screen)
+
+# ─── Classe Botao com hover ───────────────────────────────────────────────────
+class Botao:
+    def __init__(self, imagem_normal, imagem_hover, x, y):
+        self.imagem_normal = imagem_normal
+        self.imagem_hover  = imagem_hover
+        self.rect = self.imagem_normal.get_rect(topleft=(x, y))
+        self.hovered = False
+
+    def atualizar(self, pos_mouse):
+        self.hovered = self.rect.collidepoint(pos_mouse)
+
+    def draw(self, surface):
+        imagem_atual = self.imagem_hover if self.hovered else self.imagem_normal
+        surface.blit(imagem_atual, self.rect)
+
+    def foi_clicado(self, evento):
+        return (
+            evento.type == pygame.MOUSEBUTTONDOWN
+            and evento.button == 1
+            and self.hovered
+        )
+
+# ─── Carrega sprites dos botões ───────────────────────────────────────────────
+start_img_normal = pygame.image.load("imagens/botao-1.png.png").convert_alpha()
+start_img_hover  = pygame.image.load("imagens/botao-1.png (1).png").convert_alpha()
+
+start_button = Botao(start_img_normal, start_img_hover, x=200, y=240)
 
 # ─── Loop principal ───────────────────────────────────────────────────────────
 running = True
 while running:
     dt = clock.tick(60) / 1000.0
-    
+    pos_mouse = pygame.mouse.get_pos()
+
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            running = False
+        if start_button.foi_clicado(event):
+            print("Start clicado!")
+
     for gota in gotas:
         gota.update(dt)
     for camada in camadas_nevoa:
         camada.update(dt)
     flicker.update(dt)
-    
-    draw_frame()
+
+    start_button.atualizar(pos_mouse)
+
+    draw_efeitossombrios()
+    screen.blit(sombra_inferior, (0, 10))
+
+    start_button.draw(screen)
+
     pygame.display.flip()
-    
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            running = False
 
 pygame.quit()
-

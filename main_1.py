@@ -1,3 +1,5 @@
+from email.mime import image
+
 import pygame
 import os
 import random
@@ -155,20 +157,22 @@ def draw_efeitossombrios():
 
 # ─── Classe Botao com hover ───────────────────────────────────────────────────
 class Botao:
-    def __init__(self, imagem_normal, imagem_hover, x, y):
-        self.imagem_normal = imagem_normal
-        self.imagem_hover  = imagem_hover
+    def __init__(self, imagem_normal, imagem_hover, x, y, scale=0.8):
+        largura= imagem_normal.get_width()
+        altura= imagem_normal.get_height()
+        self.imagem_normal = pygame.transform.scale(imagem_normal, (int(largura * scale), int(altura * scale)))
+        self.imagem_hover  = pygame.transform.scale(imagem_hover, (int(largura * scale), int(altura * scale)))
         self.rect = self.imagem_normal.get_rect(topleft=(x, y))
         self.hovered = False
 
     def atualizar(self, pos_mouse):
         self.hovered = self.rect.collidepoint(pos_mouse)
 
-    def draw(self, surface):
+    def draw(self, surface, x, y):
         imagem_atual = self.imagem_hover if self.hovered else self.imagem_normal
-        surface.blit(imagem_atual, self.rect)
+        surface.blit(imagem_atual, (x, y))
 
-    def foi_clicado(self, evento):
+    def foi_clicado(self, evento): # Só vai servir se o mouse estiver sobre o botão / E mais tarde vou colocar um som de clique
         return (
             evento.type == pygame.MOUSEBUTTONDOWN
             and evento.button == 1
@@ -176,35 +180,35 @@ class Botao:
         )
 
 # ─── Carrega sprites dos botões ───────────────────────────────────────────────
-start_img_normal = pygame.image.load("imagens/botao-1.png.png").convert_alpha()
-start_img_hover  = pygame.image.load("imagens/botao-1.png (1).png").convert_alpha()
+start_img_idle = pygame.image.load("imagens/botao-idle.png").convert_alpha()
+start_img_hover  = pygame.image.load("imagens/botao-hovered.png").convert_alpha()       
 
-start_button = Botao(start_img_normal, start_img_hover, x=200, y=240)
+start_button = Botao(start_img_idle, start_img_hover, x=240, y=150, scale=0.8) #Posição da região clicável do botão
 
 # ─── Loop principal ───────────────────────────────────────────────────────────
 running = True
 while running:
-    dt = clock.tick(60) / 1000.0
+    dt = clock.tick(60) / 1000
     pos_mouse = pygame.mouse.get_pos()
 
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
         if start_button.foi_clicado(event):
-            print("Start clicado!")
-
-    for gota in gotas:
-        gota.update(dt)
-    for camada in camadas_nevoa:
-        camada.update(dt)
-    flicker.update(dt)
+            print("Start clicado!") # Aqui você pode iniciar o jogo ou mudar para a próxima tela
 
     start_button.atualizar(pos_mouse)
 
     draw_efeitossombrios()
     screen.blit(sombra_inferior, (0, 10))
 
-    start_button.draw(screen)
+    start_button.draw(screen, x=240, y=150) #Posição do botão
+
+    for gota in gotas:
+        gota.update(dt)
+    for camada in camadas_nevoa:
+        camada.update(dt)
+    flicker.update(dt)
 
     pygame.display.flip()
 

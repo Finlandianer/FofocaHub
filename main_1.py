@@ -17,7 +17,7 @@ pygame.display.set_caption("Didstein - Cidade Sombria")
 clock = pygame.time.Clock()
 
 # ─── Carrega o background ─────────────────────────────────────────────────────
-img_path = os.path.join(os.path.dirname(__file__), "imagens", "capoturei-1.png.png")
+img_path = os.path.join(os.path.dirname(__file__), "imagens-da-interface", "capoturei-1.png.png")
 cidadesombria_img = pygame.image.load(img_path).convert()
 cidadesombria_img = pygame.transform.scale(cidadesombria_img, (WIDTH, HEIGHT))
 
@@ -180,8 +180,8 @@ class Botao:
         )
 
 # ─── Carrega sprites dos botões ───────────────────────────────────────────────
-start_img_idle = pygame.image.load("imagens/botao-idle.png").convert_alpha()
-start_img_hover  = pygame.image.load("imagens/botao-hovered.png").convert_alpha()       
+start_img_idle = pygame.image.load("imagens-da-interface/botao-idle.png").convert_alpha()
+start_img_hover  =  pygame.image.load("imagens-da-interface/botao-hovered.png").convert_alpha()       
 
 start_button = Botao(start_img_idle, start_img_hover, x=240, y=120, scale=0.7) #Posição da região clicável do botão
 
@@ -198,7 +198,7 @@ while running:
             print("Start clicado!") # Aqui você pode iniciar o jogo ou mudar para a próxima tela
 
     start_button.atualizar(pos_mouse)
-
+    
     draw_efeitossombrios()
     screen.blit(sombra_inferior, (0, 10))
 

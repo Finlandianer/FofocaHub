@@ -301,6 +301,7 @@ def _criar_botoes():
     start_img_idle  = pygame.image.load("imagens-da-interface/botao-idle.png").convert_alpha()
     start_img_hover = pygame.image.load("imagens-da-interface/botao-hovered.png").convert_alpha()
     start_button = Botao(start_img_idle, start_img_hover, x=260, y=180, scale=0.7)
+    
 
 
 # ─── Fontes ───────────────────────────────────────────────────────────────────
@@ -330,6 +331,7 @@ def draw_textos(surface=None):
         surface = _screen
 
     start_button.draw(surface)
+
 
     titulo = fonte_titulo.render("Apagão", True, (78, 88, 97))
     titulo_rect = titulo.get_rect(centerx=_WIDTH // 2, top=20)

@@ -183,7 +183,7 @@ class Botao:
 start_img_idle = pygame.image.load("imagens/botao-idle.png").convert_alpha()
 start_img_hover  = pygame.image.load("imagens/botao-hovered.png").convert_alpha()       
 
-start_button = Botao(start_img_idle, start_img_hover, x=240, y=150, scale=0.8) #Posição da região clicável do botão
+start_button = Botao(start_img_idle, start_img_hover, x=240, y=120, scale=0.7) #Posição da região clicável do botão
 
 # ─── Loop principal ───────────────────────────────────────────────────────────
 running = True
@@ -202,7 +202,7 @@ while running:
     draw_efeitossombrios()
     screen.blit(sombra_inferior, (0, 10))
 
-    start_button.draw(screen, x=240, y=150) #Posição do botão
+    start_button.draw(screen, x=240, y=120) #Posição do botão
 
     for gota in gotas:
         gota.update(dt)

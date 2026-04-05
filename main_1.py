@@ -23,7 +23,8 @@ while running:
         if event.type == pygame.QUIT:
             running = False
         if interfaceINICIAL.start_button.foi_clicado(event):
-            print("Start clicado!")
+            interfaceINICIAL.parar_musica()
+            # TODO: transição para próxima tela do jogo
 
     interfaceINICIAL.start_button.atualizar(pygame.mouse.get_pos())
     interfaceINICIAL.draw_efeitossombrios()

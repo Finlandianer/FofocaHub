@@ -33,6 +33,22 @@ def init(screen, WIDTH, HEIGHT, audio_available):
     _criar_som_clique()
     _criar_botoes()
     _criar_fontes()
+    _carregar_musica()
+
+
+def parar_musica():
+    """Para a música quando o jogador sai da tela de interface."""
+    pygame.mixer.music.stop()
+
+
+# ─── Música de fundo ─────────────────────────────────────────────────────────
+def _carregar_musica():
+    if _has_audio:
+        try:
+            pygame.mixer.music.load("sons-interface/música-interface.wav")
+            pygame.mixer.music.play(-1)
+        except Exception:
+            pass
 
 
 # ─── Background ───────────────────────────────────────────────────────────────
@@ -284,29 +300,11 @@ def _criar_botoes():
     global start_button
     start_img_idle  = pygame.image.load("imagens-da-interface/botao-idle.png").convert_alpha()
     start_img_hover = pygame.image.load("imagens-da-interface/botao-hovered.png").convert_alpha()
-    start_button = Botao(start_img_idle, start_img_hover, x=240, y=180, scale=0.7)
+    start_button = Botao(start_img_idle, start_img_hover, x=260, y=180, scale=0.7)
 
 
-# ─── Fontes e textos ───────────────────────────────────────────────────────────────────
-class fontesEtextos:
-    def __init__(self):
-        self.titulo = self.melhor_fonte_titulo(54)
-        self.subtitulo = self.melhor_fonte_texto(16)
-        self.creditos = self.melhor_fonte_texto(16)
-
-    def melhor_fonte_titulo(self, tamanho):
-        for nome in ("cinzel", "playfair display", "georgia"):
-            if nome in [f.lower() for f in pygame.font.get_fonts()]:
-                return pygame.font.SysFont(nome, tamanho)
-        return pygame.font.Font(None, tamanho)
-
-    def melhor_fonte_texto(self, tamanho):
-        for nome in ("georgia", "times new roman", "dejavu serif"):
-            if nome in [f.lower() for f in pygame.font.get_fonts()]:
-                return pygame.font.SysFont(nome, tamanho)
-        return pygame.font.Font(None, tamanho)
+# ─── Fontes ───────────────────────────────────────────────────────────────────
 def melhor_fonte_titulo(tamanho):
-    # Fontes serifadas com personalidade para o título principal.
     for nome in ("cinzel", "playfair display", "georgia"):
         if nome in [f.lower() for f in pygame.font.get_fonts()]:
             return pygame.font.SysFont(nome, tamanho)
@@ -314,7 +312,6 @@ def melhor_fonte_titulo(tamanho):
 
 
 def melhor_fonte_texto(tamanho):
-    # Fontes legíveis e neutras para textos menores.
     for nome in ("georgia", "times new roman", "dejavu serif"):
         if nome in [f.lower() for f in pygame.font.get_fonts()]:
             return pygame.font.SysFont(nome, tamanho)
@@ -341,5 +338,5 @@ def draw_textos(surface=None):
     sub = fonte_subtitulo.render(" Aqui não há luz. ", True, (120, 130, 150))
     surface.blit(sub, sub.get_rect(centerx=_WIDTH // 2, top=titulo_rect.bottom + 2))
 
-    credits = fonte_creditos.render("Projeto de pygame à escola.", False, (20, 85, 100))
-    surface.blit(credits, credits.get_rect(centerx=_WIDTH // 2, bottom=_HEIGHT - 15))
+    credits = fonte_creditos.render("Projeto de pygame à escola.", True, (20, 85, 100))
+    surface.blit(credits, credits.get_rect(centerx=_WIDTH // 2, bottom=_HEIGHT - 10))

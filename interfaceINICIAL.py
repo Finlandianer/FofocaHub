@@ -4,9 +4,13 @@ import random
 import struct
 import wave
 import io
+import os
 
 
 # ─── Config ───────────────────────────────────────────────────────────────────
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
+
 def init(screen, WIDTH, HEIGHT, audio_available):
     """Inicializa todos os elementos da interface. Deve ser chamado após pygame.init()."""
     global _screen, _WIDTH, _HEIGHT, _has_audio
@@ -45,7 +49,8 @@ def parar_musica():
 def _carregar_musica():
     if _has_audio:
         try:
-            pygame.mixer.music.load("sons-interface/música-interface.wav")
+            pygame.mixer.music.load(os.path.join(BASE_DIR, "sons-interface", "música-interface.wav"))
+            pygame.mixer.music.set_volume(0.6)
             pygame.mixer.music.play(-1)
         except Exception:
             pass
@@ -54,8 +59,8 @@ def _carregar_musica():
 # ─── Background ───────────────────────────────────────────────────────────────
 def _carregar_background():
     global cidadesombria_img
-    img_path = "imagens-da-interface/capoturei-1.png.png"
-    cidadesombria_img = pygame.image.load(img_path).convert()
+    img_path = os.path.join(BASE_DIR, "imagens-da-interface", "background.png")
+    cidadesombria_img = pygame.image.load(img_path).convert_alpha()
     cidadesombria_img = pygame.transform.scale(cidadesombria_img, (_WIDTH, _HEIGHT))
 
 
@@ -298,8 +303,8 @@ class Botao:
 
 def _criar_botoes():
     global start_button
-    start_img_idle  = pygame.image.load("imagens-da-interface/botao-idle.png").convert_alpha()
-    start_img_hover = pygame.image.load("imagens-da-interface/botao-hovered.png").convert_alpha()
+    start_img_idle  = pygame.image.load(os.path.join(BASE_DIR, "imagens-da-interface", "botao-idle.png")).convert_alpha()
+    start_img_hover = pygame.image.load(os.path.join(BASE_DIR, "imagens-da-interface", "botao-hovered.png")).convert_alpha()
     start_button = Botao(start_img_idle, start_img_hover, x=260, y=180, scale=0.7)
     
 

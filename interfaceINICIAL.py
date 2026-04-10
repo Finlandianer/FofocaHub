@@ -38,6 +38,7 @@ def init(screen, WIDTH, HEIGHT, audio_available):
     _criar_botoes()
     _criar_fontes()
     _carregar_musica()
+    _criar_botaoContinuar()
 
 
 def parar_musica():
@@ -281,7 +282,7 @@ class Botao:
 
     def draw(self, surface):
         if self.pressed:
-            surface.blit(self.imagem_normal, (self.x + 2, self.y + 2))
+            surface.blit(self.imagem_normal, (self.x, self.y))
         elif self.hovered:
             surface.blit(self.imagem_hover, (self.x, self.y))
         else:
@@ -305,7 +306,84 @@ def _criar_botoes():
     global start_button
     start_img_idle  = pygame.image.load(os.path.join(BASE_DIR, "imagens-da-interface", "botao-idle.png")).convert_alpha()
     start_img_hover = pygame.image.load(os.path.join(BASE_DIR, "imagens-da-interface", "botao-hovered.png")).convert_alpha()
-    start_button = Botao(start_img_idle, start_img_hover, x=260, y=180, scale=0.7)
+    start_button = Botao(start_img_idle, start_img_hover, x=260, y=180)
+
+# ─── Botão Continuar (procedural, sem sprites) ────────────────────────────────
+class BotaoContinuar:
+    def __init__(self, x, y):
+        self.base_x = x
+        self.base_y = y
+        texto_surf = fonte_titulo.render("Continuar", True, (180, 190, 210))
+        pad_x, pad_y = 20, 8
+        self._botoes_w = texto_surf.get_width() + pad_x * 2
+        self._botoes_h = texto_surf.get_height() + pad_y * 2
+        self.texto_base = texto_surf
+        self.hover_scale = 1.22
+        self.hovered = False
+        self.pressed = False
+        self.press_timer = 0
+        self.texto_hover = pygame.transform.scale(
+            texto_surf,
+            (int(texto_surf.get_width() * self.hover_scale), int(texto_surf.get_height() * self.hover_scale)),
+        )
+        self.x = x
+        self.y = y
+        self._build_rects()
+
+    def _build_rects(self):
+        self.rect = pygame.Rect(self.x, self.y, self._botoes_w, self._botoes_h)
+        self.hover_rect = pygame.Rect(
+            self.x - (self._botoes_w * (self.hover_scale - 1)) // 2,
+            self.y - (self._botoes_h * (self.hover_scale - 1)) // 2,
+            int(self._botoes_w * self.hover_scale),
+            int(self._botoes_h * self.hover_scale),
+        )
+
+    def atualizar(self, pos_mouse):
+        active = self.hover_rect if self.hovered else self.rect
+        self.hovered = active.collidepoint(pos_mouse)
+        if self.hovered:
+            self.rect = self.hover_rect
+            self.x = self.rect.x
+            self.y = self.rect.y
+        else:
+            self.x = self.base_x
+            self.y = self.base_y
+            self._build_rects()
+        if self.pressed:
+            self.press_timer -= 1
+            if self.press_timer <= 0:
+                self.pressed = False
+
+    def draw(self, surface):
+        w, h = self.rect.w, self.rect.h
+        x, y = self.rect.x, self.rect.y
+        cor_borda = (200, 215, 240) if self.hovered else (120, 130, 150)
+        esp_linha = 2 if self.hovered else 1
+        pygame.draw.rect(surface, cor_borda, (x, y, w, h), esp_linha, border_radius=6)
+        txt = self.texto_hover if self.hovered else self.texto_base
+        surface.blit(txt, txt.get_rect(center=(x + w // 2, y + h // 2)))
+
+    def foi_clicado(self, evento):
+        if (
+            evento.type == pygame.MOUSEBUTTONDOWN
+            and evento.button == 1
+            and self.rect.collidepoint(evento.pos)
+        ):
+            self.pressed = True
+            self.press_timer = 6
+            if click_sound:
+                click_sound.play()
+            return True
+        return False
+
+
+def _criar_botaoContinuar():
+    global Continuar_button
+    Continuar_button = BotaoContinuar(x=280, y=245)    
+
+
+
     
 
 
@@ -336,7 +414,7 @@ def draw_textos(surface=None):
         surface = _screen
 
     start_button.draw(surface)
-
+    Continuar_button.draw(surface)
 
     titulo = fonte_titulo.render("Apagão", True, (78, 88, 97))
     titulo_rect = titulo.get_rect(centerx=_WIDTH // 2, top=20)

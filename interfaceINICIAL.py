@@ -1,18 +1,17 @@
 import pygame
 import math
 import random
-import struct
-import wave
-import io
 import os
 
 
 # ─── Config ───────────────────────────────────────────────────────────────────
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+tamanho_hover=(230, 53)
+tamanho_normal=(210, 47)
+
 
 
 def init(screen, WIDTH, HEIGHT, audio_available):
-    """Inicializa todos os elementos da interface. Deve ser chamado após pygame.init()."""
     global _screen, _WIDTH, _HEIGHT, _has_audio
     _screen = screen
     _WIDTH = WIDTH
@@ -38,19 +37,17 @@ def init(screen, WIDTH, HEIGHT, audio_available):
     _criar_botoes()
     _criar_fontes()
     _carregar_musica()
-    _criar_botaoContinuar()
 
 
 def parar_musica():
-    """Para a música quando o jogador sai da tela de interface."""
     pygame.mixer.music.stop()
 
 
-# ─── Música de fundo ─────────────────────────────────────────────────────────
+# ─── Música de fundo ──────────────────────────────────────────────────────────
 def _carregar_musica():
     if _has_audio:
         try:
-            pygame.mixer.music.load(os.path.join(BASE_DIR, "sons-interface", "música-interface.wav"))
+            pygame.mixer.music.load(os.path.join(BASE_DIR, "sons-interface", "TrilhaSonora.mp3"))
             pygame.mixer.music.set_volume(0.6)
             pygame.mixer.music.play(-1)
         except Exception:
@@ -61,8 +58,13 @@ def _carregar_musica():
 def _carregar_background():
     global cidadesombria_img
     img_path = os.path.join(BASE_DIR, "imagens-da-interface", "background.png")
-    cidadesombria_img = pygame.image.load(img_path).convert_alpha()
-    cidadesombria_img = pygame.transform.scale(cidadesombria_img, (_WIDTH, _HEIGHT))
+    if os.path.exists(img_path):
+        cidadesombria_img = pygame.image.load(img_path).convert_alpha()
+        cidadesombria_img = pygame.transform.scale(cidadesombria_img, (_WIDTH, _HEIGHT))
+    else:
+        # Cria um background escuro se a imagem não existir
+        cidadesombria_img = pygame.Surface((_WIDTH, _HEIGHT))
+        cidadesombria_img.fill((15, 18, 30))
 
 
 # ─── Chuva ────────────────────────────────────────────────────────────────────
@@ -166,7 +168,7 @@ def _criar_vinheta():
     vinheta_surf = pygame.transform.scale(surf, (_WIDTH, _HEIGHT))
 
 
-# ─── Sombra lateral esquerda ──────────────────────────────────────────────────
+# ─── Sombras ──────────────────────────────────────────────────────────────────
 def _criar_sombras():
     global sombra_esquerda, sombra_inferior
 
@@ -231,23 +233,13 @@ def update_nevoa(dt):
 
 # ─── Som de clique procedural ─────────────────────────────────────────────────
 def _gerar_som_clique():
-    sr = 22050
-    dur = 0.08
-    n = int(sr * dur)
-    buf = io.BytesIO()
-    wf = wave.open(buf, "wb")
-    wf.setnchannels(1)
-    wf.setsampwidth(2)
-    wf.setframerate(sr)
-    for i in range(n):
-        t = i / sr
-        env = max(0, 1 - i / n)
-        sample = int(math.sin(2 * math.pi * 800 * t) * env * 6000)
-        wf.writeframes(struct.pack("<h", sample))
-    wf.close()
-    buf.seek(0)
-    return pygame.mixer.Sound(buf)
-
+    if _has_audio:
+        try:
+            pygame.mixer.music.load(os.path.join(BASE_DIR, "sons-interface", "musica-interface.wav"))
+            pygame.mixer.music.set_volume(0.8)
+            pygame.mixer.music.play(1)
+        except Exception:
+            pass
 
 def _criar_som_clique():
     global click_sound
@@ -260,39 +252,69 @@ def _criar_som_clique():
         click_sound = None
 
 
-# ─── Classe Botao ─────────────────────────────────────────────────────────────
+# ─── Classe Botao (novo jogo) ─────────────────────────────────────────────────
 class Botao:
-    def __init__(self, imagem_normal, imagem_hover, x, y, scale=0.8):
-        largura = imagem_normal.get_width()
-        altura = imagem_normal.get_height()
-        self.imagem_normal = pygame.transform.scale(imagem_normal, (int(largura * scale), int(altura * scale)))
-        self.imagem_hover  = pygame.transform.scale(imagem_hover,   (int(largura * scale), int(altura * scale)))
-        self.x, self.y = x, y
-        self.rect = self.imagem_normal.get_rect(topleft=(x, y))
-        self.hovered = False
+    COR_TEXTO = (255, 255, 255)
+    FONTE_CARREGADA = None
+    
+    @classmethod
+    def _carregar_fonte(cls):
+        if cls.FONTE_CARREGADA is None:
+            cls.FONTE_CARREGADA = pygame.font.Font(os.path.join(BASE_DIR, "fontes", "Silkscreen-Regular.ttf"), 16)
+        return cls.FONTE_CARREGADA
+
+    def __init__(self, texto, centro, cor_normal, cor_hover,
+                 tamanho_normal, tamanho_hover, velocidade=0.15):
+        self.texto = texto
+        self.centro = centro
+        self.cor_normal = cor_normal
+        self.cor_hover = cor_hover
+        self.tamanho_normal = tamanho_normal
+        self.tamanho_hover = tamanho_hover
+        self.velocidade = velocidade
+        self.fonte = Botao._carregar_fonte()
+
+        self.tamanho_atual = list(tamanho_normal)
+        self._hover = False
         self.pressed = False
         self.press_timer = 0
 
     def atualizar(self, pos_mouse):
-        self.hovered = self.rect.collidepoint(pos_mouse)
+        area = pygame.Rect(
+            self.centro[0] - self.tamanho_hover[0] // 2,
+            self.centro[1] - self.tamanho_hover[1] // 2,
+            self.tamanho_hover[0],
+            self.tamanho_hover[1],
+        )
+        self._hover = area.collidepoint(pos_mouse)
+
+        alvo = self.tamanho_hover if self._hover else self.tamanho_normal
+        self.tamanho_atual[0] += (alvo[0] - self.tamanho_atual[0]) * self.velocidade
+        self.tamanho_atual[1] += (alvo[1] - self.tamanho_atual[1]) * self.velocidade
+
         if self.pressed:
             self.press_timer -= 1
             if self.press_timer <= 0:
                 self.pressed = False
 
     def draw(self, surface):
-        if self.pressed:
-            surface.blit(self.imagem_normal, (self.x, self.y))
-        elif self.hovered:
-            surface.blit(self.imagem_hover, (self.x, self.y))
-        else:
-            surface.blit(self.imagem_normal, (self.x, self.y))
+        w, h = self.tamanho_atual
+        x = self.centro[0] - w // 2
+        y = self.centro[1] - h // 2
+        rect = pygame.Rect(x, y, w, h)
+
+        cor = self.cor_hover if self._hover else self.cor_normal
+        esp_linha = 2 if self._hover else 1
+        pygame.draw.rect(surface, cor, rect, width=esp_linha, border_radius=6)
+
+        texto_surf = self.fonte.render(self.texto, False, self.COR_TEXTO)
+        surface.blit(texto_surf, texto_surf.get_rect(center=rect.center))
 
     def foi_clicado(self, evento):
         if (
             evento.type == pygame.MOUSEBUTTONDOWN
             and evento.button == 1
-            and self.hovered
+            and self._hover
         ):
             self.pressed = True
             self.press_timer = 6
@@ -303,90 +325,39 @@ class Botao:
 
 
 def _criar_botoes():
-    global start_button
-    start_img_idle  = pygame.image.load(os.path.join(BASE_DIR, "imagens-da-interface", "botao-idle.png")).convert_alpha()
-    start_img_hover = pygame.image.load(os.path.join(BASE_DIR, "imagens-da-interface", "botao-hovered.png")).convert_alpha()
-    start_button = Botao(start_img_idle, start_img_hover, x=260, y=180)
-
-# ─── Botão Continuar (procedural, sem sprites) ────────────────────────────────
-class BotaoContinuar:
-    def __init__(self, x, y):
-        self.base_x = x
-        self.base_y = y
-        texto_surf = fonte_titulo.render("Continuar", True, (180, 190, 210))
-        pad_x, pad_y = 20, 8
-        self._botoes_w = texto_surf.get_width() + pad_x * 2
-        self._botoes_h = texto_surf.get_height() + pad_y * 2
-        self.texto_base = texto_surf
-        self.hover_scale = 1.22
-        self.hovered = False
-        self.pressed = False
-        self.press_timer = 0
-        self.texto_hover = pygame.transform.scale(
-            texto_surf,
-            (int(texto_surf.get_width() * self.hover_scale), int(texto_surf.get_height() * self.hover_scale)),
-        )
-        self.x = x
-        self.y = y
-        self._build_rects()
-
-    def _build_rects(self):
-        self.rect = pygame.Rect(self.x, self.y, self._botoes_w, self._botoes_h)
-        self.hover_rect = pygame.Rect(
-            self.x - (self._botoes_w * (self.hover_scale - 1)) // 2,
-            self.y - (self._botoes_h * (self.hover_scale - 1)) // 2,
-            int(self._botoes_w * self.hover_scale),
-            int(self._botoes_h * self.hover_scale),
-        )
-
-    def atualizar(self, pos_mouse):
-        active = self.hover_rect if self.hovered else self.rect
-        self.hovered = active.collidepoint(pos_mouse)
-        if self.hovered:
-            self.rect = self.hover_rect
-            self.x = self.rect.x
-            self.y = self.rect.y
-        else:
-            self.x = self.base_x
-            self.y = self.base_y
-            self._build_rects()
-        if self.pressed:
-            self.press_timer -= 1
-            if self.press_timer <= 0:
-                self.pressed = False
-
-    def draw(self, surface):
-        w, h = self.rect.w, self.rect.h
-        x, y = self.rect.x, self.rect.y
-        cor_borda = (200, 215, 240) if self.hovered else (120, 130, 150)
-        esp_linha = 2 if self.hovered else 1
-        pygame.draw.rect(surface, cor_borda, (x, y, w, h), esp_linha, border_radius=6)
-        txt = self.texto_hover if self.hovered else self.texto_base
-        surface.blit(txt, txt.get_rect(center=(x + w // 2, y + h // 2)))
-
-    def foi_clicado(self, evento):
-        if (
-            evento.type == pygame.MOUSEBUTTONDOWN
-            and evento.button == 1
-            and self.rect.collidepoint(evento.pos)
-        ):
-            self.pressed = True
-            self.press_timer = 6
-            if click_sound:
-                click_sound.play()
-            return True
-        return False
-
-
-def _criar_botaoContinuar():
-    global Continuar_button
-    Continuar_button = BotaoContinuar(x=280, y=245)    
-
-
-
-    
-
-
+    global start_button, sair_button, Continuar_button, creditos_button
+    start_button = Botao(
+        texto="Novo Jogo",
+        centro=(400, 190),
+        cor_normal=(120, 130, 150),
+        cor_hover=(200, 215, 240),
+        tamanho_normal=tamanho_normal,
+        tamanho_hover=tamanho_hover,
+    )
+    sair_button = Botao(
+        texto="Sair",
+        centro=(400, 330),
+        cor_normal=(120, 130, 150),
+        cor_hover=(200, 215, 240),
+        tamanho_normal=tamanho_normal,
+        tamanho_hover=tamanho_hover,
+    )
+    Continuar_button = Botao(
+        texto="Continuar",
+        centro=(400, 260),
+        cor_normal=(120, 130, 150),
+        cor_hover=(200, 215, 240),
+        tamanho_normal=tamanho_normal,
+        tamanho_hover=tamanho_hover,
+    )
+    creditos_button = Botao(
+        texto="Créditos",
+        centro=(400, 400),
+        cor_normal=(120, 130, 150),
+        cor_hover=(200, 215, 240),
+        tamanho_normal=tamanho_normal,
+        tamanho_hover=tamanho_hover,
+    )
 # ─── Fontes ───────────────────────────────────────────────────────────────────
 def melhor_fonte_titulo(tamanho):
     for nome in ("cinzel", "playfair display", "georgia"):
@@ -415,12 +386,14 @@ def draw_textos(surface=None):
 
     start_button.draw(surface)
     Continuar_button.draw(surface)
+    sair_button.draw(surface)
+    creditos_button.draw(surface)
 
-    titulo = fonte_titulo.render("Apagão", True, (78, 88, 97))
+    titulo = fonte_titulo.render("Blackout", True, (78, 88, 97))
     titulo_rect = titulo.get_rect(centerx=_WIDTH // 2, top=20)
     surface.blit(titulo, titulo_rect)
 
-    sub = fonte_subtitulo.render(" Aqui não há luz. ", True, (120, 130, 150))
+    sub = fonte_subtitulo.render("Parte 1. ", True, (120, 130, 150))
     surface.blit(sub, sub.get_rect(centerx=_WIDTH // 2, top=titulo_rect.bottom + 2))
 
     credits = fonte_creditos.render("Projeto de pygame à escola.", True, (20, 85, 100))

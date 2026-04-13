@@ -1,5 +1,6 @@
-import pygame as pygame
+import pygame
 import interfaceINICIAL
+
 
 pygame.init()
 try:
@@ -18,22 +19,42 @@ interfaceINICIAL.init(screen, WIDTH, HEIGHT, has_audio)
 running = True
 while running:
     deltatime = clock.tick(60) / 1000
+    mouse_pos = pygame.mouse.get_pos()
 
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
-        if interfaceINICIAL.start_button.foi_clicado(event):
-            interfaceINICIAL.parar_musica()
-            # TODO: transição para próxima tela do jogo
 
-    interfaceINICIAL.start_button.atualizar(pygame.mouse.get_pos())
-    interfaceINICIAL.Continuar_button.atualizar(pygame.mouse.get_pos())
+
+        if interfaceINICIAL.start_button.foi_clicado(event):
+            pass  # Adicionar funcionalidade de iniciar o jogo aqui
+
+
+        if interfaceINICIAL.Continuar_button.foi_clicado(event):
+            pass  # Adicionar funcionalidade de continuar aqui
+
+
+        if interfaceINICIAL.sair_button.foi_clicado(event):
+            running = False
+
+        if interfaceINICIAL.creditos_button.foi_clicado(event):
+            pass  # Adicionar funcionalidade de créditos aqui
+
+
+    # Atualizações
+    interfaceINICIAL.start_button.atualizar(mouse_pos)
+    interfaceINICIAL.Continuar_button.atualizar(mouse_pos)
+    interfaceINICIAL.sair_button.atualizar(mouse_pos)
+    interfaceINICIAL.creditos_button.atualizar(mouse_pos)
     interfaceINICIAL.draw_efeitossombrios()
     interfaceINICIAL.draw_sombra_inferior()
     interfaceINICIAL.draw_textos()
     interfaceINICIAL.update_chuva(deltatime)
     interfaceINICIAL.update_nevoa(deltatime)
     interfaceINICIAL.flicker.update(deltatime)
-    pygame.display.flip()
 
+
+
+    pygame.display.flip()
+    clock.tick(60)
 pygame.quit()

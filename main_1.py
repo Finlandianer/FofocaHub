@@ -64,15 +64,19 @@ while running:
     interfaceINICIAL.flicker.update(deltatime)
 
 
-    # -------- DESENHO (ORDEM IMPORTA MUITO)
-    screen.fill((10,10,60))
+    # -------- DESENHO
+    screen.fill((10,10,40))
 
-    cidade.draw_cidade(screen, camera_x)
 
     interfaceINICIAL.draw_efeitossombrios(screen)
+    cidade.draw_cidade(screen, camera_x)
+
+    cidade.draw_lightning(screen)
     interfaceINICIAL.draw_sombra_inferior(screen)
     interfaceINICIAL.draw_textos(screen)
 
     pygame.display.flip()
 
 pygame.quit()
+#eu tenho um plano que é o seguinte:
+# A tela vai aparecer escura quando o jogo rodar, ela vai sair de uma sombra espessa de escuridão e clarear até aparecer a cidade, logo depois de um tempo, a cidade vai entrar denovo em um fundo de escuridão. Para gerar um drama, eu quero que um par de mãos pegue a tela preta pelo meio e abra ela, aí aparece o menu dos botões.

@@ -1,0 +1,33 @@
+* { 
+    margin: 0; padding: 0; box-sizing: border-box;
+}
+
+.cabecalho{
+    display: block;
+    align-items: center;
+}
+
+nav{
+    display:flex;
+    gap: 10px;
+    position: sticky;
+}
+
+nav[input]{
+    flex:1;
+    border-radius: 12px;
+}
+
+nav[button]{
+    padding: 5px 10px;
+    border-radius: 5px;
+    background-color: #007BFF;
+}
+
+footer{
+    position: fixed;
+    bottom: 0;
+    width: 100%;
+    text-align: center;
+    padding: 10px 0;
+}

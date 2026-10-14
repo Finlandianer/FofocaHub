@@ -1,8 +1,0 @@
-{
-  "permissions": {
-    "allow": [
-      "Bash(python main_1.py)",
-      "Bash(echo \"EXIT: $?\")"
-    ]
-  }
-}

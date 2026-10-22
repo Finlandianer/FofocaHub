@@ -4,33 +4,60 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Marketin</title>
+
+    <title>Marketing</title>
+
     <link rel="stylesheet" href="css/TelaInicial.css">
-    <link rel="stylesheet"
-    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+    <link
+        rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
+    >
 </head>
 
 <body>
 
     <div class="cabecalho">
+
         <header>
             <img src="img/logo.png" alt="Logo">
         </header>
-        <nav action="/pesquisa" method="get">
-            <i class="fas fa-magnifying-glass"></i>
-            
-            <input
-            type="search"
-            placeholder="Buscar..."
-            name="pesquisa"
-            aria-label="Clique para pesquisar">
 
-            <button type="submit">
-                <i class="fas fa-arrow-up"></i>
-            </button>
-        </nav>
+        <form action="/pesquisa" method="get" class="barra-pesquisa">
+
+            <i class="fas fa-magnifying-glass lupa"></i>
+
+            <input
+                type="search"
+                placeholder="Buscar..."
+                name="pesquisa"
+                aria-label="Buscar"
+            >
+
+            <button type="submit" aria-label="Pesquisar">
+    <svg
+        width="18"
+        height="18"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="1.5"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        aria-hidden="true"
+    >
+        <path d="M12 19V5"/>
+        <path d="m5 12 7-7 7 7"/>
+    </svg>
+</button>
+
+        </form>
+
     </div>
+
     <footer>
         <a href="suporte.html">Entre em contato</a>
     </footer>
+
 </body>
+</html>

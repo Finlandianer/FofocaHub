@@ -11,11 +11,11 @@ body {
     font-family: "Segoe UI", Arial, sans-serif;
     color: #f5f5f5;
 
-    background: linear-gradient(
-        135deg,
-        #09090b 0%,
-        #27272a 50%,
-        #52525b 100%
+    background: radial-gradient(
+        circle at 50% 30%,
+        #2a2a2b 10%,
+        #27272a 20%,
+        #161618 70% 
     );
 }
 
@@ -36,7 +36,6 @@ body {
 header img {
     width: 75px;
     height: 75px;
-
     border-radius: 50%;
     object-fit: cover;
 
@@ -83,7 +82,7 @@ header img {
     padding: 5px;
 
     background: transparent;
-    color: #333;
+    color: #cfcfcf;
 
     border: none;
     outline: none;
@@ -93,7 +92,7 @@ header img {
 
 /* TEXTO DO PLACEHOLDER */
 .barra-pesquisa input[type="search"]::placeholder {
-    color: #777;
+    color: #b9b9b9;
 }
 
 /* BOTÃO DA SETA */
